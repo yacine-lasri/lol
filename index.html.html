@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Happy Birthday Bozo 💜</title>
+<style>
+:root{--bg:#0b0810;--ink:#e9ddff;--lilac:#c8a2ff;--dim:#8f7bb0;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family:"Courier New",ui-monospace,monospace;overflow:hidden}
+canvas{position:fixed;inset:0;width:100%;height:100%;touch-action:manipulation}
+button{-webkit-tap-highlight-color:transparent}
+#intro{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:var(--bg);z-index:3;transition:opacity 1s}
+#intro button{font:inherit;font-size:1.05rem;color:var(--bg);background:var(--lilac);border:0;border-radius:999px;padding:14px 28px;cursor:pointer}
+#intro p{margin:0;color:var(--dim);font-size:.9rem}
+#msg{position:fixed;left:0;right:0;top:7%;text-align:center;padding:0 20px;z-index:2;pointer-events:none}
+#msg h1{margin:0 0 10px;font-size:clamp(1.5rem,6vw,2.6rem);color:var(--lilac);min-height:1.2em;text-shadow:0 0 24px #a96bff88}
+#msg p{margin:0;font-size:clamp(1rem,3.6vw,1.5rem);color:var(--ink);min-height:1.2em}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="msg"><h1 id="l1"></h1><p id="l2"></p></div>
+<div id="intro"><p>someone sent you something 💜</p><button id="go">open</button></div>
+<script>
+const cv=document.getElementById('c'),ctx=cv.getContext('2d');
+let W,H,D;
+function size(){D=Math.min(window.devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*D;cv.height=H*D;ctx.setTransform(D,0,0,D,0,0)}
+addEventListener('resize',size);size();
+const LILACS=['#c8a2ff','#b388f5','#d9bfff','#a874e8','#e6d4ff','#9b6ad9'];
+const GL=['✿','❀','*','❁','·','✦'];
+let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+const sprigs=[];
+const N=7;
+for(let i=0;i<N;i++){
+  const a=(i-(N-1)/2)*0.14+(rnd()-.5)*.05;
+  const len=.46+rnd()*.12-Math.abs(i-(N-1)/2)*.025;
+  const fl=[];
+  for(let k=0;k<(innerWidth<600?110:170);k++){
+    const t=.38+rnd()*.62;
+    const spread=Math.sin(Math.PI*Math.min(1,(1-t)/.62+.12))*.075;
+    fl.push({t,o:(rnd()*2-1)*spread,g:GL[Math.floor(rnd()*GL.length)],c:LILACS[Math.floor(rnd()*LILACS.length)],s:.7+rnd()*.7,b:(1-t)*-1+rnd()*.6+i*.12,ph:rnd()*6.28});
+  }
+  sprigs.push({a,len,fl,ph:rnd()*6.28});
+}
+let t0=null;
+function pt(sp,t,time,min){
+  const bx=W/2,by=H*.97,L=min*sp.len*1.75;
+  const sway=Math.sin(time*.9+sp.ph)*.012;
+  const ang=sp.a+sway*t;
+  const bend=sp.a*.35*t*t;
+  return [bx+Math.sin(ang)*L*t+bend*L*.4, by-Math.cos(ang)*L*t];
+}
+function draw(now){
+  if(t0===null)t0=now;
+  const time=(now-t0)/1000,min=Math.min(H*.8,W*1.05);
+  ctx.clearRect(0,0,W,H);
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  const fs=Math.max(11,min*.032);
+  for(const sp of sprigs){
+    ctx.fillStyle='#5f8f6a';ctx.font=fs*.9+'px "Courier New",monospace';
+    const grow=Math.min(1,time/2.2);
+    for(let u=0;u<=grow;u+=.022){
+      const [x,y]=pt(sp,u,time,min);ctx.globalAlpha=.85;ctx.fillText('|',x,y);
+    }
+    ctx.fillStyle='#4d7d59';
+    for(const u of [.12,.24]){if(u<grow){const [x,y]=pt(sp,u,time,min);ctx.fillText(sp.a<0?'❧':'☙',x+(sp.a<0?-fs:fs),y)}}
+    for(const f of sp.fl){
+      const k=Math.max(0,Math.min(1,(time-1.2-f.b-.9)/1.1));
+      if(k<=0)continue;
+      const [x,y]=pt(sp,f.t,time,min);
+      const nx=x+f.o*min*1.4+Math.sin(time*1.3+f.ph)*1.2;
+      ctx.globalAlpha=k;ctx.fillStyle=f.c;
+      ctx.font=fs*f.s*(.3+.7*k)+'px "Courier New",monospace';
+      ctx.fillText(f.g,nx,y);
+    }
+  }
+  ctx.globalAlpha=1;
+  requestAnimationFrame(draw);
+}
+function type(el,txt,delay,speed){
+  let i=0;setTimeout(function step(){el.textContent=txt.slice(0,++i);if(i<txt.length)setTimeout(step,speed)},delay);
+}
+function chime(){
+  try{
+    const ac=new (window.AudioContext||window.webkitAudioContext)();if(ac.resume)ac.resume();
+    const n=[0,0,2,0,5,4,0,0,2,0,7,5,0,0,12,9,5,4,2,10,10,9,5,7,5];
+    const d=[.5,.25,.75,.75,.75,1.5,.5,.25,.75,.75,.75,1.5,.5,.25,.75,.75,.75,.75,.75,.5,.25,.75,.75,.75,1.5];
+    let t=ac.currentTime+.2;
+    n.forEach((s,i)=>{
+      const o=ac.createOscillator(),g=ac.createGain();
+      o.type='sine';o.frequency.value=392*Math.pow(2,s/12);
+      g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.12,t+.03);g.gain.exponentialRampToValueAtTime(.001,t+d[i]*.9);
+      o.connect(g).connect(ac.destination);o.start(t);o.stop(t+d[i]);t+=d[i]*.8;
+    });
+  }catch(e){}
+}
+document.getElementById('go').onclick=()=>{
+  const intro=document.getElementById('intro');intro.style.opacity=0;setTimeout(()=>intro.remove(),1000);
+  t0=null;chime();
+  type(document.getElementById('l1'),'happy birthday bozo,',1500,70);
+  type(document.getElementById('l2'),'how does it feel turning 12?',3600,55);
+};
+requestAnimationFrame(draw);
+</script>
+</body>
+</html>
